@@ -1,0 +1,120 @@
+{
+  "name": "web-app-pipeline",
+  "env": {
+    "CI": "true",
+    "NODE_ENV": "test"
+  },
+  "stages": [
+    {
+      "name": "install",
+      "jobs": [
+        {
+          "name": "dependencies",
+          "steps": [
+            {
+              "name": "Install packages",
+              "run": "echo 'npm install' && sleep 0.5 && echo '✓ 312 packages installed'",
+              "timeout": 120
+            },
+            {
+              "name": "Audit packages",
+              "run": "echo 'npm audit' && echo '✓ found 0 vulnerabilities'",
+              "continue_on_error": true
+            }
+          ],
+          "artifacts": { "paths": ["node_modules/"] }
+        }
+      ]
+    },
+    {
+      "name": "quality",
+      "jobs": [
+        {
+          "name": "lint",
+          "needs": ["dependencies"],
+          "steps": [
+            {
+              "name": "ESLint",
+              "run": "echo 'Running eslint...' && sleep 0.3 && echo '✓ 0 errors, 2 warnings'"
+            },
+            {
+              "name": "Type check",
+              "run": "echo 'tsc --noEmit' && sleep 0.4 && echo '✓ No type errors'"
+            }
+          ]
+        },
+        {
+          "name": "test",
+          "needs": ["dependencies"],
+          "steps": [
+            {
+              "name": "Unit tests",
+              "run": "echo 'jest --coverage' && sleep 0.8 && echo '✓ 87 tests passed (0 failed)'"
+            },
+            {
+              "name": "Coverage threshold",
+              "run": "echo 'Coverage: 91% (threshold: 80%)' && echo '✓ Coverage OK'"
+            }
+          ]
+        },
+        {
+          "name": "security-scan",
+          "needs": ["dependencies"],
+          "steps": [
+            {
+              "name": "SAST scan",
+              "run": "echo 'Scanning for vulnerabilities...' && sleep 0.5 && echo '✓ No critical issues'"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "build",
+      "jobs": [
+        {
+          "name": "compile",
+          "needs": ["lint", "test"],
+          "env": { "NODE_ENV": "production" },
+          "steps": [
+            {
+              "name": "Build app",
+              "run": "echo 'vite build' && sleep 0.6 && echo '✓ dist/ built (2.1 MB)'"
+            },
+            {
+              "name": "Build Docker image",
+              "run": "echo 'docker build -t web-app:$(git rev-parse --short HEAD 2>/dev/null || echo dev) .' && echo '✓ Image built'"
+            }
+          ],
+          "artifacts": { "paths": ["dist/"] }
+        }
+      ]
+    },
+    {
+      "name": "deploy",
+      "env": { "DEPLOY_ENV": "staging" },
+      "jobs": [
+        {
+          "name": "deploy-staging",
+          "needs": ["compile"],
+          "steps": [
+            {
+              "name": "Push image",
+              "run": "echo 'docker push registry.example.com/web-app:dev' && echo '✓ Pushed'"
+            },
+            {
+              "name": "Apply manifests",
+              "run": "echo 'kubectl apply -f k8s/' && echo '✓ Deployment updated'",
+              "retry": 2
+            },
+            {
+              "name": "Wait for rollout",
+              "run": "echo 'kubectl rollout status deployment/web-app' && sleep 0.3 && echo '✓ Rollout complete'",
+              "timeout": 300
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

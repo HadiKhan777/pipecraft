@@ -1,0 +1,12 @@
+{
+  "name": "pipecraft",
+  "version": "1.0.0",
+  "description": "CI/CD pipeline engine from scratch — parallel jobs, dependency graph, retry, artifacts",
+  "main": "pipecraft.js",
+  "bin": { "pipecraft": "./pipecraft.js" },
+  "scripts": {
+    "start": "node pipecraft.js"
+  },
+  "keywords": ["ci", "cd", "pipeline", "devops", "automation"],
+  "license": "MIT"
+}

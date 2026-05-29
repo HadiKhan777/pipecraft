@@ -1,0 +1,78 @@
+{
+  "name": "pipecraft",
+  "env": {
+    "CI": "true"
+  },
+  "stages": [
+    {
+      "name": "setup",
+      "jobs": [
+        {
+          "name": "env-check",
+          "steps": [
+            {
+              "name": "Print environment",
+              "run": "echo \"Node $(node --version), OS $(uname -s)\""
+            },
+            {
+              "name": "List workspace",
+              "run": "ls -la"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "verify",
+      "jobs": [
+        {
+          "name": "lint",
+          "steps": [
+            {
+              "name": "Check syntax",
+              "run": "echo \"Linting...\"  && sleep 0.3 && echo \"✓ No issues found\""
+            }
+          ]
+        },
+        {
+          "name": "test",
+          "steps": [
+            {
+              "name": "Unit tests",
+              "run": "echo \"Running tests...\" && sleep 0.5 && echo \"✓ 42 tests passed\""
+            },
+            {
+              "name": "Coverage report",
+              "run": "echo \"Coverage: 87%\"",
+              "continue_on_error": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "build",
+      "jobs": [
+        {
+          "name": "compile",
+          "steps": [
+            {
+              "name": "Build",
+              "run": "echo \"Building...\" && sleep 0.4 && echo \"✓ Build complete\""
+            },
+            {
+              "name": "Package",
+              "run": "echo \"Packaging artifacts...\"",
+              "timeout": 60
+            }
+          ],
+          "artifacts": {
+            "paths": [
+              "dist/"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
